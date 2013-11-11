@@ -33,6 +33,29 @@ describe "UserPages" do
       it "should create a user" do
         expect { click_button submit }.to change(User, :count).by(1)
       end
+
+      describe "after saving the user" do
+        before { click_button submit }
+        let(:user) { User.find_by(email: 'user@example.com') }
+
+        it { should have_title(user.name) }
+        it { should have_selector('div.alert.alert-success', text: 'Welcome') }
+      end
+    end
+
+    describe "with invalid information" do
+      before {
+        fill_in "Name", with: ""
+        click_button submit
+      }
+
+      it { should have_title("Sign up") }
+      it { should have_content("The form contains 5 errors.") }
+      it { should have_content("Name can't be blank")}
+      it { should have_content("Email can't be blank")}
+      it { should have_content("Email is invalid")}
+      it { should have_content("Password is too short")}
+      it { should have_content("Password can't be blank")}
     end
   end
 end
