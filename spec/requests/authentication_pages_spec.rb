@@ -5,10 +5,13 @@ describe "AuthenticationPages" do
   subject { page }
 
   describe "signin" do
+    let(:user) { FactoryGirl.create(:user) }
     before { visit signin_path }
 
     it { should have_content('Sign in') }
     it { should have_title('Sign in') }
+    it { should_not have_link('Profile', href: user_path(user)) }
+    it { should_not have_link('Settings'), href: edit_user_path(user) }
 
     describe "with invalid information" do
       before { click_button "Sign in" }
@@ -23,7 +26,6 @@ describe "AuthenticationPages" do
     end
 
     describe "with valid information" do
-      let(:user) { FactoryGirl.create(:user) }
       before do
         valid_signin user
       end
@@ -38,6 +40,25 @@ describe "AuthenticationPages" do
       describe "followed by signout" do
         before { click_link "Sign out" }
         it { should have_link('Sign in') }
+      end
+
+      describe "after signin visit new user" do
+        before do
+          sign_in user, no_capybara: true
+          get new_user_path
+        end
+        specify { expect(response).to redirect_to(root_url) }
+      end
+
+      describe "after signin user signup" do
+        let(:params) do
+          { user: { name: "example", email: "hoge@hoge.com", password: "foobar", password_confirmation: "foobar" } }
+        end
+        before do
+          sign_in user, no_capybara: true
+          post users_path, params
+        end
+        specify { expect(response).to redirect_to(root_url) }
       end
     end
 
@@ -77,7 +98,21 @@ describe "AuthenticationPages" do
             expect(page).to have_title("Edit user")
           end
         end
+
+        describe "when signing in again" do
+          before do
+            delete signout_path
+            visit signin_path
+            valid_signin user
+          end
+
+          it "should render the default (profile) page" do
+            expect(page).to have_title(user.name)
+          end
+
+        end
       end
+
     end
 
     describe "as wrong user" do
