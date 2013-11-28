@@ -42,6 +42,15 @@ describe "MicropostPages" do
       end
     end
 
+    describe "as incorrect user" do
+      let(:unfollowed_user) { FactoryGirl.create(:user) }
+      before do
+        FactoryGirl.create(:micropost, user: unfollowed_user)
+        visit user_path(unfollowed_user)
+      end
+
+      it { should_not have_link("delete", href: user_path(unfollowed_user)) }
+    end
   end
 
 end
