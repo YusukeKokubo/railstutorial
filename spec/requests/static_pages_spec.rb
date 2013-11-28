@@ -23,10 +23,34 @@ describe "StaticPages" do
         user.feed.each do |item|
           expect(page).to have_selector("li##{item.id}", text: item.content)
         end
+      end
 
+      it { should have_content("2 microposts") }
+      describe "count of micropost" do
+        before do
+          user.microposts.first.destroy
+          visit root_path
+        end
+        it { should have_content("1 micropost") }
+      end
+
+      describe "pagination" do
+        before do
+          50.times { FactoryGirl.create(:micropost, user: user, content: "abc") }
+          visit root_path
+        end
+
+        it { should have_selector("div.pagination") }
+
+        it "should list each micropost" do
+          Micropost.paginate(page: 1).each do |micropost|
+            expect(page).to have_selector("li##{micropost.id}", text: micropost.content)
+          end
+        end
       end
     end
   end
+
 
   describe "Help page" do
     before { visit help_path }
